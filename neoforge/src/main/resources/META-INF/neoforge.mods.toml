@@ -1,0 +1,32 @@
+modLoader = "javafml"
+loaderVersion = "[2,)"
+issueTrackerURL = "https://github.com/barnabwhy/CommandOptimiser/issues"
+license = "MIT"
+
+[[mods]]
+modId = "commandoptimiser"
+version = "${version}"
+displayName = "Command Optimiser"
+authors = "Barnaby"
+description = '''
+Reduces performance impact of command blocks by caching parsing results.
+'''
+logoFile = "assets/smoothmaps/icon.pmg"
+
+[[dependencies.commandoptimiser]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.commandoptimiser]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21,)"
+ordering = "NONE"
+side = "BOTH"
+
+
+[[mixins]]
+config = "commandoptimiser.mixins.json"

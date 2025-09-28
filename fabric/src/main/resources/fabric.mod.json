@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "commandoptimiser",
+  "version": "${version}",
+  "name": "Command Optimiser",
+  "description": "Reduces performance impact of command blocks by caching parsing results.",
+  "authors": [
+    "Barnaby"
+  ],
+  "contact": {
+    "sources": "https://github.com/barnabwhy/CommandOptimiser",
+    "issues": "https://github.com/barnabwhy/CommandOptimiser/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/commandoptimiser/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "cc.barnab.commandoptimiser.fabric.CommandoptimiserFabric"
+    ],
+    "client": [
+      "cc.barnab.commandoptimiser.fabric.client.CommandoptimiserFabricClient"
+    ]
+  },
+  "mixins": [
+    "commandoptimiser.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=${fabric_loader_version}",
+    "minecraft": ">=${min_minecraft_version} <=${max_minecraft_version}",
+    "java": ">=21"
+  }
+}
