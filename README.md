@@ -10,4 +10,4 @@ Depending on the number of command blocks you use, the performance gains may var
 
 You can safely expect that the TPS impact of command blocks will reduce by at least 10-20%. Gains will likely be smaller for commands that affect blocks than other, less intensive commands.
 
-Testing with real-world command usage showed a reduction of about 25-30%
+Testing with real-world command usage showed a reduction of about 25-30% (overall 1-2% of server processing time).
