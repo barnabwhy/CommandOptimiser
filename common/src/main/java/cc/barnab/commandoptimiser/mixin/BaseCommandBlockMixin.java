@@ -24,8 +24,6 @@ import static net.minecraft.commands.Commands.trimOptionalPrefix;
 
 @Mixin(BaseCommandBlock.class)
 public abstract class BaseCommandBlockMixin {
-    @Shadow public abstract ServerLevel getLevel();
-
     @Shadow private String command;
 
     @Unique
@@ -33,24 +31,23 @@ public abstract class BaseCommandBlockMixin {
     @Unique
     private String commandoptimiser$commandNoSlash;
 
-    @Shadow public abstract CommandSourceStack createCommandSourceStack(CommandSource commandSource);
+    @Shadow public abstract CommandSourceStack createCommandSourceStack(ServerLevel serverLevel, CommandSource commandSource);
 
     @Shadow private int successCount;
 
-    @Shadow @Nullable protected abstract CloseableCommandBlockSource createSource();
+    @Shadow @Nullable protected abstract CloseableCommandBlockSource createSource(ServerLevel serverLevel);
 
     @Unique
     private ParseResults<CommandSourceStack> commandoptimiser$parseResults;
 
     @Inject(method = "setCommand", at = @At("TAIL"))
     private void parseOnSetCommand(String string, CallbackInfo ci) throws Exception {
-        // Parse when the player changes the command
-        if (getLevel() != null)
-            commandoptimiser$parse();
+        // Parse when the player changes the command (DISABLED, Mojang removed serverLevel from this class)
+        // commandoptimiser$parse(serverLevel);
     }
 
-    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/BaseCommandBlock;createSource()Lnet/minecraft/world/level/BaseCommandBlock$CloseableCommandBlockSource;"))
-    private CloseableCommandBlockSource skipCommandSource(BaseCommandBlock instance) {
+    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/BaseCommandBlock;createSource(Lnet/minecraft/server/level/ServerLevel;)Lnet/minecraft/world/level/BaseCommandBlock$CloseableCommandBlockSource;"))
+    private CloseableCommandBlockSource skipCommandSource(BaseCommandBlock instance, ServerLevel serverLevel) {
         // Don't create unused command source
         return null;
     }
@@ -61,8 +58,8 @@ public abstract class BaseCommandBlockMixin {
         return null;
     }
 
-    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/BaseCommandBlock;createCommandSourceStack(Lnet/minecraft/commands/CommandSource;)Lnet/minecraft/commands/CommandSourceStack;"))
-    private CommandSourceStack skipCommandSource3(BaseCommandBlock instance, CommandSource commandSource) {
+    @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/level/BaseCommandBlock;createCommandSourceStack(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/commands/CommandSource;)Lnet/minecraft/commands/CommandSourceStack;"))
+    private CommandSourceStack skipCommandSource3(BaseCommandBlock instance, ServerLevel serverLevel, CommandSource commandSource) {
         // Don't create unused command source
         return null;
     }
@@ -74,10 +71,10 @@ public abstract class BaseCommandBlockMixin {
     }
 
     @Redirect(method = "performCommand", at = @At(value = "INVOKE", target = "Lnet/minecraft/commands/Commands;performPrefixedCommand(Lnet/minecraft/commands/CommandSourceStack;Ljava/lang/String;)V"))
-    private void performParsed(Commands instance, CommandSourceStack commandSourceStack, String string) throws Exception {
+    private void performParsed(Commands instance, CommandSourceStack commandSourceStack, String string, ServerLevel serverLevel) throws Exception {
         // Parse if not done by first call
         if (commandoptimiser$parseResults == null || !string.equals(commandoptimiser$parsedCommand))
-            commandoptimiser$parse();
+            commandoptimiser$parse(serverLevel);
 
         // Perform parsed command
         instance.performCommand(commandoptimiser$parseResults, commandoptimiser$commandNoSlash);
@@ -85,12 +82,15 @@ public abstract class BaseCommandBlockMixin {
 
 
     @Unique
-    private void commandoptimiser$parse() throws Exception {
+    private void commandoptimiser$parse(ServerLevel serverLevel) throws Exception {
+        if (serverLevel == null)
+            return;
+
         // Create command source stack
         CommandSourceStack commandSourceStack;
-        try (CloseableCommandBlockSource closeableCommandBlockSource = this.createSource()) {
+        try (CloseableCommandBlockSource closeableCommandBlockSource = this.createSource(serverLevel)) {
             CommandSource commandSource = Objects.requireNonNullElse(closeableCommandBlockSource, CommandSource.NULL);
-            commandSourceStack = createCommandSourceStack(commandSource).withCallback((bl, i) -> {
+            commandSourceStack = createCommandSourceStack(serverLevel, commandSource).withCallback((bl, i) -> {
                 if (bl) {
                     ++successCount;
                 }
@@ -98,7 +98,7 @@ public abstract class BaseCommandBlockMixin {
         }
 
         // Get server
-        MinecraftServer minecraftServer = getLevel().getServer();
+        MinecraftServer minecraftServer = serverLevel.getServer();
 
         // Store command string we are parsing
         commandoptimiser$parsedCommand = command;
